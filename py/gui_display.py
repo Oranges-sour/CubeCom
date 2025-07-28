@@ -1,22 +1,29 @@
-import pygame
+import flet as ft
+import threading
 import queue
+import time
+
+DEBUG = True
 
 WIDTH, HEIGHT = 640, 480
-SCALE = 2
-RENDER_WIDTH, RENDER_HEIGHT = WIDTH * SCALE, HEIGHT * SCALE
 
-BG_COLOR = (30, 30, 30)
-MSG_COLOR = (200, 255, 200)
-ALERT_COLOR = (255, 100, 100)
+BG_COLOR = "#1e1e1e"
+MSG_COLOR = "#c8ffc8"
+ALERT_COLOR = "#ff6464"
 FONT_SIZE = 14
-LINE_HEIGHT = 30
-MAX_LINES = (HEIGHT - 40) // LINE_HEIGHT
+LINE_HEIGHT = 22
+PADDING = 20
+MAX_LINES = (HEIGHT - PADDING * 2) // LINE_HEIGHT
 
-FONT_PATH = "font.ttf"
+FONT_FAMILY = "font"  # 如有自定义字体需配置
+FONT_PATH = "font.ttf"  # 静态资源路径，见Flet文档
 
 _event_queue = queue.Queue()
 _lines = []
 _gui_running = False
+_page = None
+_text_column = None
+_update_lock = threading.Lock()
 
 
 def display_message(text):
@@ -32,79 +39,90 @@ def close_gui():
     _gui_running = False
 
 
-def wrap_text(text, font, max_width):
-    """将text按像素宽度max_width自动换行，返回行列表。"""
-    words = text.split(" ")
-    lines = []
-    current_line = ""
-    for word in words:
-        test_line = current_line + ("" if current_line == "" else " ") + word
-        if font.size(test_line)[0] <= max_width:
-            current_line = test_line
-        else:
-            if current_line:
-                lines.append(current_line)
-            # 单个单词可能超长，强行拆分
-            while font.size(word)[0] > max_width:
-                for i in range(1, len(word) + 1):
-                    if font.size(word[:i])[0] > max_width:
-                        break
-                # i-1字符能塞下
-                lines.append(word[: i - 1])
-                word = word[i - 1 :]
-            current_line = word
-    if current_line:
-        lines.append(current_line)
-    return lines
-
-
-def run():
-    """必须在主线程调用。"""
-    global _gui_running
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("消息与警告显示")
-    font = pygame.font.Font(FONT_PATH, FONT_SIZE * SCALE)
-    clock = pygame.time.Clock()
-    _gui_running = True
-
-    margin = 20 * SCALE
-    max_text_width = RENDER_WIDTH - 2 * margin
-
+def _ui_updater():
+    # 后台线程：处理队列和刷新UI
+    global _lines, _gui_running, _page, _text_column
     while _gui_running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                _gui_running = False
-
-        # 消息处理
+        updated = False
         try:
+            # 批量处理所有新消息
             while True:
                 evt_type, content = _event_queue.get_nowait()
                 color = MSG_COLOR if evt_type == "msg" else ALERT_COLOR
-                # 自动换行
-                wrapped = wrap_text(content, font, max_text_width)
-                for line in wrapped:
+                # 按原来策略拆分成多
+                for line in content.splitlines():
                     _lines.append((evt_type, line))
                 # 保持最大行数
                 while len(_lines) > MAX_LINES:
                     _lines.pop(0)
+                updated = True
         except queue.Empty:
             pass
 
-        # 在高分辨率surface绘制
-        render_surf = pygame.Surface((RENDER_WIDTH, RENDER_HEIGHT))
-        render_surf.fill(BG_COLOR)
-        y = margin
-        for typ, line in _lines:
-            color = MSG_COLOR if typ == "msg" else ALERT_COLOR
-            text_surf = font.render(line, True, color)
-            render_surf.blit(text_surf, (margin, y))
-            y += LINE_HEIGHT * SCALE
+        if updated and _page and _text_column:
+            _text_column.controls.clear()
+            for typ, line in _lines:
+                color = MSG_COLOR if typ == "msg" else ALERT_COLOR
+                _text_column.controls.append(
+                    ft.Text(
+                        line,
+                        size=FONT_SIZE,
+                        color=color,
+                        font_family=FONT_FAMILY,
+                    )
+                )
+            _page.update()
 
-        # 缩放回窗口
-        scaled_surf = pygame.transform.scale(render_surf, (WIDTH, HEIGHT))
-        screen.blit(scaled_surf, (0, 0))
+        time.sleep(0.1)
 
-        pygame.display.flip()
-        clock.tick(30)
-    pygame.quit()
+
+def run(page: ft.Page):
+    """
+    必须在主线程调用，Flet的入口。
+    """
+    global _gui_running, _page, _text_column
+    _gui_running = True
+    _page = page
+
+    page.title = "CubeCom"
+    page.bgcolor = BG_COLOR
+    if not DEBUG:
+        page.window.left = 0
+        page.window.top = 0
+        page.window.movable = False
+        page.window.title_bar_buttons_hidden = True
+    page.window.width = WIDTH
+    page.window.height = HEIGHT
+    page.window.resizable = False
+    page.window.title_bar_hidden = True
+
+
+    # 用Column按行显示文本
+    _text_column = ft.Column(
+        controls=[],
+        spacing=2,
+        scroll=ft.ScrollMode.AUTO,
+        expand=True,
+    )
+
+    # 页面布局
+    container = ft.Container(
+        content=_text_column,
+        padding=PADDING,
+        bgcolor=BG_COLOR,
+        width=WIDTH - PADDING * 2,
+        height=HEIGHT - PADDING * 2,
+        border_radius=0,
+    )
+
+    page.add(container)
+
+    t = threading.Thread(target=_ui_updater, daemon=True)
+    t.start()
+
+    page.update()
+
+
+# 如果作为脚本运行也可以这样启动
+if __name__ == "__main__":
+    ft.app(target=run)

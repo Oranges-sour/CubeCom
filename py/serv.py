@@ -5,7 +5,7 @@ import requests
 import uuid
 import threading
 import gui_display
-
+import flet as ft
 
 session_map = {}  # 用于保存映射关系：int16 id <-> Coze会话ID
 message_map = {}  # 用于保存 message_id -> message 内容 的映射
@@ -310,10 +310,9 @@ def handle_message(msg: str):
         cubeCom.send("-1")  # 未知指令返回错误
 
 
-# 主循环
 def main_loop():
     # 串口初始化
-    if not cubeCom.init("/dev/tty.usbmodem21103"):  # 替换成你的串口名称
+    if not cubeCom.init("/dev/tty.usbmodem21103"):
         return
     try:
         while True:
@@ -326,19 +325,19 @@ def main_loop():
         cubeCom.close()
         print("串口关闭，程序1s后退出。")
         time.sleep(1)
-        exit(0)
 
 
 if __name__ == "__main__":
-    # 主循环放到子线程
+    # 1. 先起业务主循环线程
     t = threading.Thread(target=main_loop, daemon=True)
     t.start()
 
-    # 在主线程跑Pygame界面
-    gui_display.run()  # 这行在主线程，**必须在主线程运行**，否则会报错
+    # 2. 用Flet方式启动GUI（必须主线程，不能直接调用run）
+    ft.app(target=gui_display.run)
 
+    gui_display.close_gui()
+    # 3. 结束处理
     cubeCom.close()
     print("串口关闭，程序1s后退出。")
     time.sleep(1)
-    # 程序退出时可根据需求清理
     print("程序已退出。")
