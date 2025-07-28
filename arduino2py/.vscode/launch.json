@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "C++ debug",
+            "program": "${workspaceFolder}/out/main",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "C++: clang++ 编译全部"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "C++ python",
+            "program": "",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "C++: clang++ 编译python库"
+        }
+    ]
+}

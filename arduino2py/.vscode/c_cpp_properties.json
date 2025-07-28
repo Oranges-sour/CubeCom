@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/Users/orange/.pyenv/versions/3.11.9/lib/python3.11/site-packages/pybind11/include",
+                "/opt/homebrew/opt/tcl-tk/include",
+                "/Users/orange/.pyenv/versions/3.11.9/include/python3.11"
+            ],
+            "defines": [],
+            "cStandard": "c17",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "macos-clang-arm64"
+        }
+    ],
+    "version": 4
+}
