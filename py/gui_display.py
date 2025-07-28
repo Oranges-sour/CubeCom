@@ -168,13 +168,17 @@ def run(page: ft.Page):
     _img_control = ft.Image(
         src_base64="",
         width=WIDTH,
-        height=HEIGHT,
-        fit=ft.ImageFit.CONTAIN,
+        height=300,
+        fit=ft.ImageFit.FIT_WIDTH,
         visible=False,
     )
 
     # # 页面布局：图片在上，文本在下
-    main_column = ft.Column(controls=[_img_control, _text_column])
+    main_column = ft.Column(
+        controls=[_img_control, _text_column],
+        alignment=ft.MainAxisAlignment.START,  # 顶部对齐
+        spacing=10,
+    )
 
     # 页面布局
     container = ft.Container(
