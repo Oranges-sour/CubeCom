@@ -38,13 +38,13 @@ queue<string> in_que;
 
 static mutex m;
 
-void init(const string& device) {
+bool init(const string& device) {
     run = true;
 
     serial = open(device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (serial == -1) {
         printf("open serial err!\n");
-        return;
+        return false;
     }
     struct termios options;
     tcgetattr(serial, &options);
@@ -68,13 +68,12 @@ void init(const string& device) {
     // 清空接收缓冲区
     tcflush(serial, TCIOFLUSH);
 
-
     fu1 = async([]() {
         char str[1024];
         i16 len;
         while (run) {
             serialEvent();
-            
+
             Talk::read(str, len);
             if (len > 0) {
                 str[len] = 0;
@@ -87,6 +86,8 @@ void init(const string& device) {
             this_thread::sleep_for(1ms);
         }
     });
+
+    return true;
 }
 
 void sclose() {
@@ -116,7 +117,7 @@ string receive() {
 #ifdef PPPY
 namespace py = pybind11;
 
-PYBIND11_MODULE(cubeCom, m) {           
+PYBIND11_MODULE(cubeCom, m) {
     m.doc() = "pybind11 cubeCom plugin";
 
     m.def("init", &init, "打开串口并初始化");

@@ -6,8 +6,8 @@ i16 Talk::tail = 0;
 
 extern int serial;
 
-constexpr char PRE_CHR = 0xAA;
-constexpr char START_CHR = 0xAB;
+constexpr i16 PRE_CHR = 0xAA;
+constexpr i16 START_CHR = 0xAB;
 
 enum State { s_prefix = 0, s_start_b, s_len, s_data, s_check_sum };
 

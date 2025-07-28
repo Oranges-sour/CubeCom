@@ -3,7 +3,8 @@ import time
 import cubeCom
 import requests
 import uuid
-import time
+import threading
+import gui_display
 
 
 session_map = {}  # 用于保存映射关系：int16 id <-> Coze会话ID
@@ -16,10 +17,7 @@ last_failed_message = "最近一次的失败消息"  # 默认失败消息
 # COZE 配置
 COZE_API_BASE = "https://api.coze.cn/v1"
 COZE_GPT_API_BASE = " https://api.coze.cn/v3"
-COZE_API_KEY = "pat_TzsWzEGdMY6pqIVi0TcCrYgMOlsOW4gk8fwb3wuCz6lsrq2vUNIYPDwauIfhY1zO"  #Coze API 密钥
-
-# 串口初始化
-cubeCom.init("/dev/tty.usbmodem21103")  # 替换成你的串口名称
+COZE_API_KEY = "pat_TzsWzEGdMY6pqIVi0TcCrYgMOlsOW4gk8fwb3wuCz6lsrq2vUNIYPDwauIfhY1zO"  # Coze API 密钥
 
 
 # 创建会话
@@ -166,7 +164,6 @@ def ask_agent(agent_id, session_id, prompt, max_wait=30):
                 answer_content = m.get("content", "")
                 break
 
-
         # 4. 更新本地message_map
         message_id = next_message_id
         next_message_id += 1
@@ -253,12 +250,14 @@ def show_message(message_id):
         message = message_map[message_id]
 
     print(f"show message: '{message}'")
+    gui_display.display_message(message)
     return 1
 
 
 # 显示警告消息
 def show_alert(alert_info):
     print(f"Alert: {alert_info}")
+    gui_display.display_alert(alert_info)
     return 1
 
 
@@ -313,6 +312,9 @@ def handle_message(msg: str):
 
 # 主循环
 def main_loop():
+    # 串口初始化
+    if not cubeCom.init("/dev/tty.usbmodem21103"):  # 替换成你的串口名称
+        return
     try:
         while True:
             if not cubeCom.empty():
@@ -328,4 +330,15 @@ def main_loop():
 
 
 if __name__ == "__main__":
-    main_loop()
+    # 主循环放到子线程
+    t = threading.Thread(target=main_loop, daemon=True)
+    t.start()
+
+    # 在主线程跑Pygame界面
+    gui_display.run()  # 这行在主线程，**必须在主线程运行**，否则会报错
+
+    cubeCom.close()
+    print("串口关闭，程序1s后退出。")
+    time.sleep(1)
+    # 程序退出时可根据需求清理
+    print("程序已退出。")
