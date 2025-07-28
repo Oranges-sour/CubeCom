@@ -4,6 +4,14 @@
 
 // --- 工具函数 ---
 
+void CubeLLM::fmt4(char* buf, int buflen, const char* cmd, const char* a1,
+                   int a2, int a3, const char* s) {
+    if (s)
+        snprintf(buf, buflen, "%s\n%s\n%d\n%d\n%s\n", cmd, a1, a2, a3, s);
+    else
+        snprintf(buf, buflen, "%s\n%s\n%d\n%d\n", cmd, a1, a2, a3);
+}
+
 void CubeLLM::fmt3(char* buf, int buflen, const char* cmd, const char* a1,
                    int a2, const char* s) {
     if (s)
@@ -94,5 +102,37 @@ i16 CubeLLM::show_message(i16 message_id) {
 i16 CubeLLM::show_alert(const char* alert_info) {
     char req[256];
     fmt1(req, sizeof(req), "SHOW_ALERT", alert_info);
+    return send_and_wait(req);
+}
+
+i16 CubeLLM::open_camera() {
+    char req[256];
+    fmt0(req, sizeof(req), "OPEN_CAMERA");
+    return send_and_wait(req);
+}
+
+i16 CubeLLM::close_camera() {
+    char req[256];
+    fmt0(req, sizeof(req), "CLOSE_CAMERA");
+    return send_and_wait(req);
+}
+
+i16 CubeLLM::take_photo() {
+    char req[256];
+    fmt0(req, sizeof(req), "TAKE_PHOTO");
+    return send_and_wait(req);
+}
+
+i16 CubeLLM::show_photo(i16 photo_id) {
+    char req[256];
+    fmt2(req, sizeof(req), "SHOW_PHOTO", photo_id, nullptr);
+    return send_and_wait(req);
+}
+
+i16 CubeLLM::ask_agent_with_photo(const char* agent_id, i16 session_id,
+                                  i16 photo_id, const char* prompt) {
+    char req[256];
+    fmt4(req, sizeof(req), "ASK_AGENT_WITH_PHOTO", agent_id, session_id,
+         photo_id, prompt);
     return send_and_wait(req);
 }

@@ -1,11 +1,14 @@
 import flet as ft
 import threading
 import queue
+import cv2
+import numpy as np
+import base64
 import time
 
 DEBUG = True
 
-WIDTH, HEIGHT = 640, 480
+WIDTH, HEIGHT = 480, 640
 
 BG_COLOR = "#1e1e1e"
 MSG_COLOR = "#c8ffc8"
@@ -23,7 +26,63 @@ _lines = []
 _gui_running = False
 _page = None
 _text_column = None
-_update_lock = threading.Lock()
+
+
+_preview_running = False
+_preview_thread = None
+_img_control = None
+_page = None
+
+
+def _cv2_to_flet_image(frame):
+    # 将BGR图像转为RGB后，编码为PNG格式字节流
+    frame_flip = cv2.flip(frame, 1)
+    success, buf = cv2.imencode(".jpg", frame_flip)
+    if not success:
+        return None
+    return buf.tobytes()
+
+
+def show_image(frame):
+    global _img_control, _page
+    img_bytes = _cv2_to_flet_image(frame)
+    if img_bytes is not None and _img_control:
+        img_base64 = base64.b64encode(img_bytes).decode()
+        _img_control.src_base64 = img_base64
+        if _page:
+            _page.update()
+
+
+def start_camera_preview():
+    global _preview_running, _preview_thread
+    if _preview_running:
+        return
+    _preview_running = True
+    if _preview_thread is None or not _preview_thread.is_alive():
+        _preview_thread = threading.Thread(target=_camera_preview_loop, daemon=True)
+        _preview_thread.start()
+
+        _img_control.visible = True
+
+
+def stop_camera_preview():
+    global _preview_running
+    _img_control.visible = False
+    _preview_running = False
+    if _page and _gui_running:
+        _page.update()
+
+
+def _camera_preview_loop():
+    import cam
+
+    global _preview_running, _img_control, _page
+    while _preview_running and _gui_running:
+        if cam.is_camera_open():
+            frame = cam.get_last_frame()
+            if frame is not None:
+                show_image(frame)
+        time.sleep(0.03)  # 约33fps
 
 
 def display_message(text):
@@ -37,6 +96,7 @@ def display_alert(text):
 def close_gui():
     global _gui_running
     _gui_running = False
+    stop_camera_preview()
 
 
 def _ui_updater():
@@ -80,7 +140,7 @@ def run(page: ft.Page):
     """
     必须在主线程调用，Flet的入口。
     """
-    global _gui_running, _page, _text_column
+    global _gui_running, _page, _text_column, _img_control
     _gui_running = True
     _page = page
 
@@ -96,7 +156,6 @@ def run(page: ft.Page):
     page.window.resizable = False
     page.window.title_bar_hidden = True
 
-
     # 用Column按行显示文本
     _text_column = ft.Column(
         controls=[],
@@ -105,13 +164,25 @@ def run(page: ft.Page):
         expand=True,
     )
 
+    # 新增图片区域
+    _img_control = ft.Image(
+        src_base64="",
+        width=WIDTH,
+        height=HEIGHT,
+        fit=ft.ImageFit.CONTAIN,
+        visible=False,
+    )
+
+    # # 页面布局：图片在上，文本在下
+    main_column = ft.Column(controls=[_img_control, _text_column])
+
     # 页面布局
     container = ft.Container(
-        content=_text_column,
+        content=main_column,
         padding=PADDING,
         bgcolor=BG_COLOR,
-        width=WIDTH - PADDING * 2,
-        height=HEIGHT - PADDING * 2,
+        width=WIDTH,
+        height=HEIGHT,
         border_radius=0,
     )
 

@@ -33,17 +33,36 @@ class CubeLLM {
     i16 message_have(i16 message_id, const char* key_word);
     // 消息转语音
     i16 message_to_speech(i16 message_id);
-
     // 显示消息
     i16 show_message(i16 mesage_id);
     // 显示警告消息
     i16 show_alert(const char* alert_info);
+
+    // 摄像头相关
+
+    // 打开摄像头
+    i16 open_camera();
+
+    // 关闭摄像头
+    i16 close_camera();
+
+    // 拍摄照片，返回照片id
+    i16 take_photo();
+
+    // 显示照片
+    i16 show_photo(i16 photo_id);
+
+    // 询问agent，附带照片
+    i16 ask_agent_with_photo(const char* agent_id, i16 session_id, i16 photo_id,
+                             const char* prompt);
 
    private:
     // 工具：发送请求并同步等回复（超时返回负数）
     i16 send_and_wait(const char* req);
 
     // 工具：格式化命令
+    void fmt4(char* buf, int buflen, const char* cmd, const char* a1, int a2,
+              int a3, const char* s);
     void fmt3(char* buf, int buflen, const char* cmd, const char* a1, int a2,
               const char* s);
     void fmt2(char* buf, int buflen, const char* cmd, int a1, const char* s);

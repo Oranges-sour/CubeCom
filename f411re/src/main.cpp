@@ -4,27 +4,30 @@
 
 float session;
 float msg1;
+float photo1;
 CubeLLM cubeLLM;
 
 void setup() {
     Serial.begin(115200);
     session = cubeLLM.create_session();
-    cubeLLM.ask_agent("7531253423325593663", session, "你好!");
-    msg1 = cubeLLM.get_recent_message(session);
-    cubeLLM.show_message(msg1);
-    cubeLLM.ask_agent("7531253423325593663", session,
-                      "请介绍 秋水共长天一色 诗句");
-    msg1 = cubeLLM.get_recent_message(session);
-    if ((cubeLLM.message_have(msg1, "王勃") > 0)) {
-        cubeLLM.show_alert("AI回答正确");
-        cubeLLM.show_message(msg1);
-    } else {
-        cubeLLM.show_alert("AI回答错误");
-    }
-    cubeLLM.clear_session_context(session);
-    cubeLLM.show_alert("对话结束");
+    // cubeLLM.ask_agent("7531253423325593663", session, "你好!");
+    // msg1 = cubeLLM.get_recent_message(session);
+    // cubeLLM.show_message(msg1);
+    cubeLLM.show_alert("结束");
+    cubeLLM.show_alert("结束");
+    cubeLLM.show_alert("结束");
+    cubeLLM.show_alert("结束");
+    cubeLLM.open_camera();
+    // delay(1 * 1000);
+    // photo1 = cubeLLM.take_photo();
+    // delay(1 * 1000);
+    // cubeLLM.close_camera();
+    // cubeLLM.show_alert("照片已经拍摄");
+    // cubeLLM.ask_agent_with_photo("7531253423325593663", session, photo1,
+    //                              "照片中的人是什么心情");
+    // msg1 = cubeLLM.get_recent_message(session);
+    // cubeLLM.show_message(msg1);
+    // cubeLLM.show_alert("结束");
 }
 
-void loop() {
-
-}
+void loop() {}

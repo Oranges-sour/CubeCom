@@ -1,26 +1,52 @@
+# cam.py
 import cv2
+import threading
 
-# 打开默认摄像头（一般编号为 0）
-cap = cv2.VideoCapture(0)
+_camera = None
+_camera_lock = threading.Lock()
+_last_frame = None
+_running = False
 
-if not cap.isOpened():
-    print("无法打开摄像头")
-    exit()
 
-while True:
-    # 读取一帧图像
-    ret, frame = cap.read()
-    if not ret:
-        print("无法读取视频帧")
-        break
+def open_camera():
+    global _camera, _running
+    with _camera_lock:
+        if _camera is None:
+            _camera = cv2.VideoCapture(0)
+            _running = True
+            threading.Thread(target=_capture_loop, daemon=True).start()
+    return _camera.isOpened()
 
-    # 显示这一帧
-    cv2.imshow("Camera", frame)
 
-    # 按下 'q' 键退出循环
-    if cv2.waitKey(1) & 0xFF == ord("q"):
-        break
+def _capture_loop():
+    global _camera, _last_frame, _running
+    while _running and _camera and _camera.isOpened():
+        ret, frame = _camera.read()
+        if ret:
+            _last_frame = frame
+        else:
+            break
 
-# 释放摄像头资源并关闭所有窗口
-cap.release()
-cv2.destroyAllWindows()
+
+def close_camera():
+    global _camera, _running
+    with _camera_lock:
+        _running = False
+        if _camera:
+            _camera.release()
+            _camera = None
+
+
+def is_camera_open():
+    global _camera
+    return _camera is not None and _camera.isOpened()
+
+
+def get_last_frame():
+    global _last_frame
+    return _last_frame
+
+
+def take_photo():
+    # 返回当前帧
+    return get_last_frame()
