@@ -1,0 +1,6 @@
+wheel
+pybind11
+opencv-python
+requests
+flet
+numpy
