@@ -98,7 +98,7 @@ void sclose() {
 
 void send(const string& str) { Talk::send(str.c_str(), str.size()); }
 
-bool empty() {
+bool my_empty() {
     unique_lock<mutex> lk(m);
     return in_que.empty();
 }
@@ -123,7 +123,7 @@ PYBIND11_MODULE(cubeCom, m) {
     m.def("init", &init, "打开串口并初始化");
     m.def("close", &sclose, "关闭串口并清理");
     m.def("send", &send, "发送数据");
-    m.def("empty", &empty, "in队列是否为空");
+    m.def("empty", &my_empty, "in队列是否为空");
     m.def("receive", &receive, "从in队列获取一条消息");
 }
 
