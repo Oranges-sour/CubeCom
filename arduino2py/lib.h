@@ -12,7 +12,7 @@ void sclose();
 
 void send(const string& str);
 
-bool empty();
+bool my_empty();
 
 string receive();
 
