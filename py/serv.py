@@ -8,6 +8,7 @@ import gui_display
 import cv2
 import numpy as np
 import cam
+import tomllib
 import flet as ft
 
 session_map = {}  # 用于保存映射关系：int16 id <-> Coze会话ID
@@ -553,8 +554,11 @@ def main_loop():
 
 
 if __name__ == "__main__":
+    with open("config.toml", "rb") as f:
+        config = tomllib.load(f)
+
     # 串口初始化
-    if not cubeCom.init("/dev/tty.usbmodem21103"):
+    if not cubeCom.init(config["base"]["serial"]):
         exit(-1)
 
     # 1. 先起业务主循环线程
