@@ -1,2 +1,2 @@
 #!/bin/bash
-python setup.py build && python setup.py install --user
+python setup.py bdist_wheel && pip install .
