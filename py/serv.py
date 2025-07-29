@@ -539,9 +539,6 @@ def handle_message(msg: str):
 
 
 def main_loop():
-    # 串口初始化
-    if not cubeCom.init("/dev/tty.usbmodem21103"):
-        return
     try:
         while True:
             if not cubeCom.empty():
@@ -556,6 +553,10 @@ def main_loop():
 
 
 if __name__ == "__main__":
+    # 串口初始化
+    if not cubeCom.init("/dev/tty.usbmodem21103"):
+        exit(-1)
+
     # 1. 先起业务主循环线程
     t = threading.Thread(target=main_loop, daemon=True)
     t.start()
