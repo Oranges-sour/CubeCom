@@ -3,6 +3,7 @@
 #ifdef PPPY
 #include <pybind11/pybind11.h>
 #endif
+#include <dirent.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -27,23 +28,102 @@ using namespace std;
 using namespace std::chrono;
 
 #include "Talk.h"
+#include "lib.h"
 
 int serial = -1;
 
 atomic_bool run;
+atomic_bool alive;
 
 future<void> fu1;
+future<void> fu2;
 
 queue<string> in_que;
 
+string device;
+
 static mutex m;
 
-bool init(const string& device) {
+bool init(const string& _device) {
+    device = _device;
     run = true;
+    alive = false;
 
+    fu1 = async([]() {
+        char str[1024];
+        i16 len;
+        while (run) {
+            if (alive) {
+                serialEvent();
+
+                Talk::read(str, len);
+                if (len > 0) {
+                    str[len] = 0;
+                    {
+                        unique_lock<mutex> lk(m);
+                        in_que.push(string(str));
+                    }
+                }
+            }
+
+            this_thread::sleep_for(1ms);
+        }
+    });
+
+    fu2 = async([]() {
+        while (run) {
+            if (alive && !check_device()) {
+                printf("serial offline.\n");
+                alive = false;
+                close(serial);
+            }
+
+            if (!alive && check_device()) {
+                // 串口掉了，尝试回连
+                if (open_and_config_serial()) {
+                    printf("serial online.\n");
+                    alive = true;
+                }
+            }
+
+            this_thread::sleep_for(1000ms);
+        }
+    });
+
+    return true;
+}
+
+void sclose() {
+    run = false;
+    fu1.get();
+    fu2.get();
+    if (alive) {
+        close(serial);
+    }
+}
+
+void send(const string& str) { Talk::send(str.c_str(), str.size()); }
+
+bool my_empty() {
+    unique_lock<mutex> lk(m);
+    return in_que.empty();
+}
+
+string receive() {
+    unique_lock<mutex> lk(m);
+    if (in_que.empty()) {
+        return string("");
+    }
+
+    string str = in_que.front();
+    in_que.pop();
+
+    return str;
+}
+
+bool open_and_config_serial() {
     serial = open(device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (serial == -1) {
-        printf("open serial err!\n");
         return false;
     }
     struct termios options;
@@ -68,52 +148,29 @@ bool init(const string& device) {
     // 清空接收缓冲区
     tcflush(serial, TCIOFLUSH);
 
-    fu1 = async([]() {
-        char str[1024];
-        i16 len;
-        while (run) {
-            serialEvent();
-
-            Talk::read(str, len);
-            if (len > 0) {
-                str[len] = 0;
-                {
-                    unique_lock<mutex> lk(m);
-                    in_que.push(string(str));
-                }
-            }
-
-            this_thread::sleep_for(1ms);
-        }
-    });
-
     return true;
 }
 
-void sclose() {
-    run = false;
-    fu1.get();
-    close(serial);
-}
-
-void send(const string& str) { Talk::send(str.c_str(), str.size()); }
-
-bool my_empty() {
-    unique_lock<mutex> lk(m);
-    return in_que.empty();
-}
-
-string receive() {
-    unique_lock<mutex> lk(m);
-    if (in_que.empty()) {
-        return string("");
+bool check_device() {
+    DIR* dir = opendir("/dev");
+    if (dir == NULL) {
+        return false;
     }
+    bool suc = false;
 
-    string str = in_que.front();
-    in_que.pop();
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name,
+                   device.substr(device.rfind('/') + 1).c_str()) == 0) {
+            suc = true;
+            break;
+        }
+    }
+    closedir(dir);
 
-    return str;
+    return suc;
 }
+
 #ifdef PPPY
 namespace py = pybind11;
 

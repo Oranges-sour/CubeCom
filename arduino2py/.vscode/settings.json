@@ -71,6 +71,8 @@
         "map": "cpp",
         "memory": "cpp",
         "iterator": "cpp",
-        "print": "cpp"
+        "print": "cpp",
+        "span": "cpp",
+        "typeindex": "cpp"
     }
 }

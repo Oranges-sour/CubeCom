@@ -1,3 +1,4 @@
+#include <dirent.h>
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
@@ -50,6 +51,8 @@ std::string random_string(size_t length) {
 }
 
 int main() {
+
+
     init("/dev/tty.usbmodem21103");
 
     int bytes_send = 0;
@@ -59,7 +62,7 @@ int main() {
         // send(random_string(128));
         // bytes_send += 128;
         // this_thread::sleep_for(100ms);
-        if (!empty()) {
+        if (!my_empty()) {
             static int cnt = 0;
             cnt += 1;
             auto s = receive();
@@ -74,7 +77,7 @@ int main() {
 
             // send(s);
         }
-        // this_thread::sleep_for(1000ms);
+        this_thread::sleep_for(1ms);
     }
 
     return 0;
