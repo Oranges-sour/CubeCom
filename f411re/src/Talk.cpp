@@ -23,26 +23,33 @@ i16 data_len_cnt = 0;
 
 char data_buf[DATA_BUF_SIZE];
 
+bool is_big_endian() {
+    i16 x = 0x1234;
+    if (*((char*)&x) == 0x12) {
+        return true;
+    }
+    return false;
+}
+
 i16 to_big(i16 x) {
-#if BYTE_ORDER == BIG_ENDIAN
-    return x;
-#else
+    if (is_big_endian()) {
+        return x;
+    }
+
     i16 a;
     *(char*)&a = *((char*)&x + 1);
     *(((char*)&a) + 1) = *((char*)&x);
     return a;
-#endif
 }
 
 i16 to_local(i16 x) {
-#if BYTE_ORDER == BIG_ENDIAN
-    return x;
-#else
+    if (is_big_endian()) {
+        return x;
+    }
     i16 a;
     *(char*)&a = *(((char*)&x + 1));
     *(((char*)&a) + 1) = *((char*)&x);
     return a;
-#endif
 }
 
 struct MsgHead {
