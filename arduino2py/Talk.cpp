@@ -31,8 +31,19 @@ i16 to_big(i16 x) {
     return x;
 #else
     i16 a;
-    *(char*)&a = x >> 8;
-    *(((char*)&a) + 1) = x & 0xFF;
+    *(char*)&a = *((char*)&x + 1);
+    *(((char*)&a) + 1) = *((char*)&x);
+    return a;
+#endif
+}
+
+i16 to_local(i16 x) {
+#if BYTE_ORDER == BIG_ENDIAN
+    return x;
+#else
+    i16 a;
+    *(char*)&a = *(((char*)&x + 1));
+    *(((char*)&a) + 1) = *((char*)&x);
     return a;
 #endif
 }
@@ -61,7 +72,7 @@ void Talk::send(const char* smsg, i16 len) {
 
     i16 check_sum = 0;
     for (i16 i = 0; i < m.len; ++i) {
-        check_sum += m.d[i];
+        check_sum += *(unsigned char*)&m.d[i];
     }
     check_sum = to_big(check_sum);
     memcpy(buf, (const void*)&head, sizeof(head));
@@ -135,19 +146,12 @@ void update(i16 byte) {
             break;
         case s_len:
             if (start_len_cnt == 0) {
-#if BYTE_ORDER != BIG_ENDIAN
-                msg_len = (byte << 8);
-#else
-                msg_len = byte;
-#endif
+                *((char*)&msg_len) = (byte & 0xFF);
                 start_len_cnt += 1;
             } else if (start_len_cnt == 1) {
-#if BYTE_ORDER != BIG_ENDIAN
-                msg_len = msg_len | (byte & 0xFF);
-#else
-                msg_len = msg_len | ((byte << 8) & 0xFF00);
-#endif
+                *(((char*)&msg_len) + 1) = (byte & 0xFF);
 
+                msg_len = to_local(msg_len);
                 state = s_data;
                 data_len_cnt = 0;
             }
@@ -177,18 +181,12 @@ void update(i16 byte) {
             break;
         case s_check_sum:
             if (check_len_cnt == 0) {
-#if BYTE_ORDER != BIG_ENDIAN
-                check_sum = (byte << 8);
-#else
-                check_sum = byte;
-#endif
+                *((char*)&check_sum) = (byte & 0xFF);
                 check_len_cnt += 1;
             } else if (check_len_cnt == 1) {
-#if BYTE_ORDER != BIG_ENDIAN
-                check_sum = check_sum | (byte & 0xFF);
-#else
-                check_sum = check_sum | ((byte << 8) & 0xFF00);
-#endif
+                *(((char*)&check_sum) + 1) = (byte & 0xFF);
+                check_sum = to_local(check_sum);
+
                 // 检验check_sum
                 i16 check1 = 0;
                 for (i16 i = 0; i < msg_len; ++i) {

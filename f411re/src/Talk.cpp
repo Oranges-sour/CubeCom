@@ -174,11 +174,11 @@ bool update() {
                 } else if (check_len_cnt == 1) {
                     *(((char*)&check_sum) + 1) = (byte & 0xFF);
                     check_sum = to_local(check_sum);
-                    
+
                     // 检验check_sum
                     i16 check1 = 0;
                     for (i16 i = 0; i < msg_len; ++i) {
-                        check1 += data_buf[i];
+                        check1 += *(unsigned char*)&data_buf[i];
                     }
                     bool suc = false;
                     if (check1 == check_sum) {
