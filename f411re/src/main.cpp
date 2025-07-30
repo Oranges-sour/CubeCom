@@ -9,25 +9,9 @@ CubeLLM cubeLLM;
 
 void setup() {
     Serial.begin(115200);
-    session = cubeLLM.create_session();
-    // cubeLLM.ask_agent("7531253423325593663", session, "你好!");
-    // msg1 = cubeLLM.get_recent_message(session);
-    // cubeLLM.show_message(msg1);
-    cubeLLM.show_alert("结束");
-    cubeLLM.show_alert("结束");
-    cubeLLM.show_alert("结束");
-    cubeLLM.show_alert("结束");
-    cubeLLM.open_camera();
-    // delay(1 * 1000);
-    // photo1 = cubeLLM.take_photo();
-    // delay(1 * 1000);
-    // cubeLLM.close_camera();
-    // cubeLLM.show_alert("照片已经拍摄");
-    // cubeLLM.ask_agent_with_photo("7531253423325593663", session, photo1,
-    //                              "照片中的人是什么心情");
-    // msg1 = cubeLLM.get_recent_message(session);
-    // cubeLLM.show_message(msg1);
-    // cubeLLM.show_alert("结束");
 }
 
-void loop() {}
+void loop() {
+    delay(5*1000);
+    cubeLLM.show_alert("hello");
+}
