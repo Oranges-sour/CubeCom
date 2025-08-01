@@ -180,7 +180,9 @@ def _show_start_page():
         ),
         ft.GestureDetector(  # 返回欢迎界面按钮
             on_tap=on_back,
-            content=ft.Container(width=100, height=640, opacity=0.01, bgcolor=ALERT_COLOR),
+            content=ft.Container(
+                width=100, height=640, opacity=0.01, bgcolor=ALERT_COLOR
+            ),
             left=0,
             top=0,
         ),
@@ -210,22 +212,22 @@ def _show_start_page():
 
 def _show_a_page():
     global _a_container, _page
- 
+
     def on_back(e):
         global _page_mode
         _page_mode = "start"
         _update_page_visibility()
- 
+
     back_btn = ft.ElevatedButton(
-        text="返回", 
-        on_click=on_back, 
-        bgcolor="#1677ff", 
-        color="#fff", 
-        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=20))
+        text="返回",
+        on_click=on_back,
+        bgcolor="#1677ff",
+        color="#ffffff",
+        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=20)),
     )
- 
+
     web_view = ft.WebView(url=URL_A, expand=True)
- 
+
     _a_container = ft.Container(
         content=ft.Stack(
             controls=[
@@ -256,7 +258,7 @@ def _show_b_page():
         text="返回",
         on_click=on_back,
         bgcolor="#1677ff",
-        color="#fff",
+        color="#ffffff",
         style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=20)),
     )
 
@@ -275,10 +277,11 @@ def _show_b_page():
         padding=0,
         border_radius=0,
     )
-    
+
     _page.controls.clear()
     _page.add(_a_container)
     _page.update()
+
 
 def _show_c_page():
     global _main_container, _page, _img_control, _text_column
@@ -289,15 +292,30 @@ def _show_c_page():
         _page_mode = "start"
         _update_page_visibility()
 
-    back_btn = ft.ElevatedButton("返回", on_click=on_back)
-    main_column = ft.Column(
-        controls=[back_btn, _img_control, _text_column],
-        alignment=ft.MainAxisAlignment.START,
-        spacing=10,
+    back_btn = ft.ElevatedButton(
+        "返回",
+        on_click=on_back,
+        bgcolor="#1677ff",
+        color="#ffffff",
+        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=20)),
     )
+
     _main_container = ft.Container(
-        content=main_column,
-        padding=PADDING,
+        content=ft.Stack(
+            controls=[
+                ft.Container(
+                    content=ft.Column(
+                        controls=[_img_control, _text_column],
+                        alignment=ft.MainAxisAlignment.START,
+                        spacing=10,
+                    ),
+                    padding=PADDING,
+                ),
+                ft.Container(content=back_btn, right=20, top=20),
+            ],
+            expand=True,
+        ),
+        padding=0,
         bgcolor=BG_COLOR,
         width=WIDTH,
         height=HEIGHT,
@@ -306,6 +324,7 @@ def _show_c_page():
     _page.controls.clear()
     _page.add(_main_container)
     _page.update()
+
 
 def _show_d_page():
     global _a_container, _page
@@ -319,7 +338,7 @@ def _show_d_page():
         "返回",
         on_click=on_back,
         bgcolor="#1677ff",
-        color="#fff",
+        color="#ffffff",
         style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=20)),
     )
 
