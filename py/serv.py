@@ -25,7 +25,7 @@ next_photo_id = 1  #
 # COZE 配置
 COZE_API_BASE = "https://api.coze.cn/v1"
 COZE_GPT_API_BASE = " https://api.coze.cn/v3"
-COZE_API_KEY = "pat_TzsWzEGdMY6pqIVi0TcCrYgMOlsOW4gk8fwb3wuCz6lsrq2vUNIYPDwauIfhY1zO"  # Coze API 密钥
+COZE_API_KEY = ""  # Coze API 密钥
 
 
 # 工具函数
@@ -560,6 +560,8 @@ if __name__ == "__main__":
     # 串口初始化
     if not cubeCom.init(config["base"]["serial"]):
         exit(-1)
+
+    COZE_API_KEY = config["base"]["api_key"]
 
     # 1. 先起业务主循环线程
     t = threading.Thread(target=main_loop, daemon=True)
