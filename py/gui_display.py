@@ -100,6 +100,7 @@ def _show_welcome_page():
         ),
         width=WIDTH,
         height=HEIGHT,
+        expand=False,
         bgcolor=None,
     )
     _page.controls.clear()
@@ -202,6 +203,7 @@ def _show_start_page():
         ),
         width=WIDTH,
         height=HEIGHT,
+        expand=False,
         bgcolor=None,
     )
 
@@ -236,9 +238,11 @@ def _show_a_page():
             ],
             expand=True,
         ),
-        expand=True,
         bgcolor=BG_COLOR,
         padding=0,
+        width=WIDTH,
+        height=HEIGHT,
+        expand=False,
         border_radius=0,
     )
     _page.controls.clear()
@@ -272,7 +276,9 @@ def _show_b_page():
             ],
             expand=True,
         ),
-        expand=True,
+        width=WIDTH,
+        height=HEIGHT,
+        expand=False,
         bgcolor=BG_COLOR,
         padding=0,
         border_radius=0,
@@ -319,6 +325,7 @@ def _show_c_page():
         bgcolor=BG_COLOR,
         width=WIDTH,
         height=HEIGHT,
+        expand=False,
         border_radius=0,
     )
     _page.controls.clear()
@@ -352,7 +359,9 @@ def _show_d_page():
             ],
             expand=True,
         ),
-        expand=True,
+        width=WIDTH,
+        height=HEIGHT,
+        expand=False,
         bgcolor=BG_COLOR,
         padding=0,
         border_radius=0,
