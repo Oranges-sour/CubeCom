@@ -476,6 +476,7 @@ def run(page: ft.Page):
     """
     必须在主线程调用，Flet的入口。
     """
+
     global _gui_running, _page, _text_column, _img_control
     _gui_running = True
     _page = page
